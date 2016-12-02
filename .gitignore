@@ -1,0 +1,6 @@
+IMLS*.xml
+IMLS*.xml.gz
+generated/*.csv
+generated/report*
+coverage/
+.DS_Store

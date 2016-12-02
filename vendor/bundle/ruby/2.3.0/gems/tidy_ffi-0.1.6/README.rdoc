@@ -1,0 +1,29 @@
+= Tidy FFI
+
+== What is it all about?
+
+I wanted to have a clean and simple tidy library. For example:
+  TidyFFI::Tidy.new('a string').clean
+
+For now it can't do anything else than clean (and saves errors from it) :)
+
+== Options
+
+You can use different ways to specify options. These examples produce the same output:
+
+  TidyFFI::Tidy.default_options.show_body_only = true
+  TidyFFI::Tidy.new('test').clean
+
+  TidyFFI::Tidy.with_options(:show_body_only => true).new('test').clean
+
+  tidy = TidyFFI::Tidy.new('test')
+  tidy.options.show_body_only = true
+  tidy.clean
+
+  TidyFFI::Tidy.new('test', :show_body_only => true).clean
+
+  TidyFFI::Tidy.clean('test', :show_body_only => 1)
+
+== Other stuff
+
+And of course, it's depenedent on ffi and libtidy. So make sure they're installed before using the library!
