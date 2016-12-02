@@ -276,6 +276,7 @@ describe 'normalize_project' do
     result = {
       'Abstract' => nil,
       'AttachmentCount' => 0,
+      'CommonCoreId' => nil,
       'ContinueProject' => nil,
       'ContinueProjectText' => nil,
       'DirectorEmail' => nil,
@@ -289,6 +290,7 @@ describe 'normalize_project' do
       'FindingsImportance' => nil,
       'Grantee' => nil,
       'GranteeType' => nil,
+      'IpedsId' => nil,
       'LessonsLearned' => nil,
       'OtherChange' => nil,
       'OtherChangeText' => nil,
@@ -298,6 +300,7 @@ describe 'normalize_project' do
       'OutcomeMethodObservation' => nil,
       'OutcomeMethodOther' => nil,
       'ParentProjectId' => nil,
+      'PlsId' => nil,
       'ProjectCode' => nil,
       'ProjectID' => nil,
       'ScopeChange' => nil,
@@ -355,6 +358,7 @@ describe 'convert_hashes' do
           {
             'Abstract' => nil,
             'AttachmentCount' => 0,
+            'CommonCoreId' => nil,
             'ContinueProject' => nil,
             'ContinueProjectText' => nil,
             'DirectorEmail' => nil,
@@ -368,6 +372,7 @@ describe 'convert_hashes' do
             'FindingsImportance' => nil,
             'Grantee' => nil,
             'GranteeType' => nil,
+            'IpedsId' => nil,
             'LessonsLearned' => nil,
             'OtherChange' => nil,
             'OtherChangeText' => nil,
@@ -377,6 +382,7 @@ describe 'convert_hashes' do
             'OutcomeMethodObservation' => nil,
             'OutcomeMethodOther' => nil,
             'ParentProjectId' => nil,
+            'PlsId' => nil,
             'ProjectCode' => nil,
             'ProjectID' => nil,
             'ScopeChange' => nil,
@@ -395,6 +401,27 @@ describe 'convert_hashes' do
       }
     ]
     expect(convert_hashes(hashes)).to eq(result)
+  end
+end
+
+describe 'order' do
+  it 'should handle ordering a basic example' do
+    sorting = [
+      'Jameson',
+      [
+        'Zorro',
+        'Moxie',
+        [
+          'Byerly',
+          'Minnie',
+        ]
+      ]
+    ]
+    expect(order('Jameson', 0, sorting)).to eq([0])
+    expect(order('Zorro', 1, sorting)).to eq([1, 0, 0])
+    expect(order('Moxie', 1, sorting)).to eq([1, 0, 1])
+    expect(order('Byerly', 1, sorting)).to eq([1, 0, 2, 0, 0])
+    expect(order('Minnie', 1, sorting)).to eq([1, 0, 2, 0, 1])
   end
 end
 
@@ -454,26 +481,44 @@ describe 'write_csv' do
     ]
 
     allow(File).to receive(:open)
-                       .with('generated/test.csv', 'wb', :universal_newline => false)
+                       .with('generated/foo/test.csv', 'wb', :universal_newline => false)
                        .and_return(StringIO.new)
 
-    expect(write_csv('test.csv', headers, states, 'foo')).to eq(states)
+    expect(write_csv('test.csv', headers, states, 'foo', 'generated/foo')).to eq(states)
   end
 end
 
-describe 'upload_csv' do
+describe 'write_state_csvs' do
+  it 'should handle a multiple items' do
+    allow(File).to receive(:open)
+                       .with('generated/foo/Projects--FY2000-now.csv', 'wb', :universal_newline => false)
+                       .and_return(StringIO.new)
+
+    states = [
+      {
+        "Project" => [{
+          "Id" => '123'
+        }],
+      }
+    ]
+
+    expect(write_state_csvs(states, 'generated/foo', '2000', 'now')).to eq(states)
+  end
+end
+
+describe 'upload_zip' do
   it 'should allow file uploads' do
     contents = double('contents')
     allow(contents).to receive(:create)
-                           .with('adhocteam', 'imls-state-program-report', 'data/test.csv',
-                                 :path => 'data/test.csv',
-                                 :message => 'Automated upload of test.csv',
+                           .with('IMLS', 'state-program-report-data', 'reports/test.zip',
+                                 :path => 'reports/test.zip',
+                                 :message => 'Automated upload of test.zip',
                                  :content => 'file contents')
 
     allow(Github::Client::Repos::Contents).to receive(:new).with(:oauth_token => nil).and_return(contents)
     allow(File).to receive(:open) { |&block| block.call(StringIO.new('file contents')) }
 
-    expect(upload_csv('test.csv')).to eq(nil)
+    expect(upload_zip('test.zip')).to eq(nil)
   end
 end
 
@@ -485,7 +530,9 @@ describe 'parse_file' do
   it 'should not upload without a token' do
     ARGV.push('spec/test.xml.gz')
 
-    expect(self).not_to receive(:upload_csv)
+    allow(Dir).to receive(:mkdir)
+    expect(self).not_to receive(:upload_zip)
+    allow(self).to receive(:write_csv)
 
     parse_file
   end
@@ -550,10 +597,11 @@ describe 'parse_file' do
       }
     ]
 
+    allow(Dir).to receive(:mkdir)
+    allow(self).to receive(:`)
     allow(self).to receive(:parse_xml).and_return(test_xml)
-    allow(self).to receive(:upload_csv)
-    allow(self).to receive(:write_csv).with(/FSR/, headers, states, :FSR)
-    allow(self).to receive(:write_csv).with(/Project/, headers, states, :Project)
+    allow(self).to receive(:upload_zip)
+    allow(self).to receive(:write_csv)
 
     ARGV.push('spec/test.xml.gz')
     ENV['GITHUB_TOKEN'] = 'foo'

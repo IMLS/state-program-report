@@ -522,6 +522,34 @@ SORTING = {
   ]
 }
 
+# Convenience function that handles special ordering of nested elements.
+def order(col_name, index, sorting)
+  # Turn 'foo.1.2' into `name = 'foo'`, `major = 1`, and `minor = 2`.
+  # Pad the results so that for something like `foo.1`, `minor` will
+  # just be `0`.
+  name, *nums = col_name.split('.')
+  major, minor = (nums.map(&:to_i) + [0, 0])[0..1]
+
+  # Handle an element located in an ordering sublist
+  if sorting[index].is_a? Array
+    sub_index = sorting[index].index do |i|
+      if i.is_a? Array then i.include? name else name == i end
+    end
+
+    # Handle an element located in an ordering subsublist.
+    # Beyond this is forbidden. Do not attempt it.
+    if sorting[index][sub_index].is_a? Array
+      sub_sub_index = sorting[index][sub_index].index name
+
+      [index, major, sub_index, minor, sub_sub_index]
+    else
+      [index, major, sub_index]
+    end
+  else
+    [index]
+  end
+end
+
 # Helper method for sorting columns according to the original XML ordering.
 # We lose that information due to the unordered nature of Ruby's hashes, so
 # we explicitly provide an ordering for this function.
@@ -538,34 +566,6 @@ def sort_columns(x, y, key)
   y_index = SORTING[key].index do |i|
     col_name = y.sub(/\..*/, '')
     if i.is_a? Array then i.flatten.include? col_name else col_name == i end
-  end
-
-  # Convenience function that handles special ordering of nested elements.
-  def order(col_name, index, sorting)
-    # Turn 'foo.1.2' into `name = 'foo'`, `major = 1`, and `minor = 2`.
-    # Pad the results so that for something like `foo.1`, `minor` will
-    # just be `0`.
-    name, *nums = col_name.split('.')
-    major, minor = (nums.map(&:to_i) + [0, 0])[0..1]
-
-    # Handle an element located in an ordering sublist
-    if sorting[index].is_a? Array
-      sub_index = sorting[index].index do |i|
-        if i.is_a? Array then i.include? name else name == i end
-      end
-
-      # Handle an element located in an ordering subsublist.
-      # Beyond this is forbidden. Do not attempt it.
-      if sorting[index][sub_index].is_a? Array
-        sub_sub_index = sorting[index][sub_index].index name
-
-        [index, major, sub_index, minor, sub_sub_index]
-      else
-        [index, major, sub_index]
-      end
-    else
-      [index]
-    end
   end
 
   # Gracefully handle missing items, putting them at the end of
