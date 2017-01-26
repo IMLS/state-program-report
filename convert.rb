@@ -252,6 +252,8 @@ def normalize_project(project, state)
   intents = parse_intents to_list (project['Intents'] || {})['Intent']
   activities = parse_activity_columns to_list (project['ProjectActivities'] || {})['ProjectActivity']
 
+  outcome_methods = project['Outcomes']['OutcomeMethods'] || {}
+
   project_hash = {
     'ProjectID' => project['@id'],
     'ProjectCode' => project['@sprProjectCode'],
@@ -276,11 +278,11 @@ def normalize_project(project, state)
     'CommonCoreId' => (project['Grantee'] || {})['CommonCoreId'],
     'Findings' => project['Outcomes']['Findings'],
     'FindingsImportance' => project['Outcomes']['FindingsImportance'],
-    'OutcomeMethodSurvey' => project['Outcomes']['OutcomeMethods']['OutcomeMethodSurvey'],
-    'OutcomeMethodAdminData' => project['Outcomes']['OutcomeMethods']['OutcomeMethodAdminData'],
-    'OutcomeMethodFocusGroup' => project['Outcomes']['OutcomeMethods']['OutcomeMethodFocusGroup'],
-    'OutcomeMethodObservation' => project['Outcomes']['OutcomeMethods']['OutcomeMethodObservation'],
-    'OutcomeMethodOther' => project['Outcomes']['OutcomeMethods']['OutcomeMethodOther'],
+    'OutcomeMethodSurvey' => outcome_methods['OutcomeMethodSurvey'],
+    'OutcomeMethodAdminData' => outcome_methods['OutcomeMethodAdminData'],
+    'OutcomeMethodFocusGroup' => outcome_methods['OutcomeMethodFocusGroup'],
+    'OutcomeMethodObservation' => outcome_methods['OutcomeMethodObservation'],
+    'OutcomeMethodOther' => outcome_methods['OutcomeMethodOther'],
     'LessonsLearned' => project['Outcomes']['LessonsLearned'],
     'ContinueProject' => project['Outcomes']['ContinueProject'],
     'ContinueProjectText' => project['Outcomes']['ContinueProjectText'],
@@ -661,6 +663,12 @@ def parse_file
   end
 
   doc = parse_xml ARGV[0]
+
+  if doc['ImlsExport'] == nil
+    puts 'There was an error parsing the document!'
+    puts "Expected to find 'ImlsExport', found `#{doc.keys.inspect}` instead."
+    exit(1)
+  end
 
   # Create some convenience variables
   fiscal_year = doc['ImlsExport']['FiscalYear']['@year']
