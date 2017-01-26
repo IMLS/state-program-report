@@ -18,10 +18,13 @@ require 'nori'
 require 'tidy_ffi'
 
 
-# Parses the zipped XML file into a nested Hash
+# Parses the zipped XML file into a nested Hash. Removes all numeric
+# code character entities, as they cause the nori parser to break in
+# weird ways:
+# https://github.com/savonrb/nori/issues/71
 def parse_xml(filename)
   Zlib::GzipReader.open(filename, encoding: "BINARY") { |f|
-    Nori.new.parse f.read
+    Nori.new.parse f.read.gsub /&#x[a-zA-Z0-9]{2};/, ''
   }
 end
 
