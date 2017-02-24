@@ -675,7 +675,7 @@ def parse_file
 
   # Create some convenience variables
   fiscal_year = doc['ImlsExport']['FiscalYear']['@year']
-  now = DateTime.now.strftime('%FT%T')
+  now = DateTime.now.strftime('%FT%H%M')
   directory = "generated/report-#{now}"
   filenames = {
       'FSR': "FSRs-FY#{fiscal_year}-#{now}.csv",
