@@ -256,6 +256,14 @@ def normalize_project(project, state)
   activities = parse_activity_columns to_list (project['ProjectActivities'] || {})['ProjectActivity']
 
   outcome_methods = project['Outcomes']['OutcomeMethods'] || {}
+  grantee = project['Grantee'] || {}
+
+  grantee_address = if grantee['Address1'].nil?
+    nil
+  else
+    "#{grantee['Address1']} #{grantee['Address2']} #{grantee['Address3']} " +
+    "#{grantee['City']}, #{grantee['State']} #{grantee['Zip']}"
+  end
 
   project_hash = {
     'ProjectID' => project['@id'],
@@ -274,11 +282,12 @@ def normalize_project(project, state)
     'DirectorName' => (project['Director'] || {})['Name'],
     'DirectorPhone' => (project['Director'] || {})['Phone'],
     'DirectorEmail' => (project['Director'] || {})['Email'],
-    'Grantee' => (project['Grantee'] || {})['Name'],
-    'GranteeType' => (project['Grantee'] || {})['Type'],  # Only found in FY13 XML file
-    'PlsId' => (project['Grantee'] || {})['PlsId'],
-    'IpedsId' => (project['Grantee'] || {})['IpedsId'],
-    'CommonCoreId' => (project['Grantee'] || {})['CommonCoreId'],
+    'Grantee' => grantee['Name'],
+    'GranteeAddress' => grantee_address,
+    'GranteeType' => grantee['Type'],  # Only found in FY13 XML file
+    'PlsId' => grantee['PlsId'],
+    'IpedsId' => grantee['IpedsId'],
+    'CommonCoreId' => grantee['CommonCoreId'],
     'Findings' => project['Outcomes']['Findings'],
     'FindingsImportance' => project['Outcomes']['FindingsImportance'],
     'OutcomeMethodSurvey' => outcome_methods['OutcomeMethodSurvey'],

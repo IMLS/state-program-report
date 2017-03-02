@@ -48,7 +48,7 @@ Next install the `Bundler` gem:
 
 Install `tidy` as well:
 
-    wget http://binaries.html-tidy.org/binaries/tidy-5.2.0/tidy-5.2.0-64bit.deb && sudo dpkg -i tidy-5.2.0-64bit.deb
+    wget https://github.com/htacg/tidy-html5/releases/download/5.4.0/tidy-5.4.0-64bit.deb && dpkg -i tidy-5.2.0-64bit.deb
 
 You will also need to generate a
 [Github access token](https://help.github.com/articles/creating-an-access-token-for-command-line-use/).
