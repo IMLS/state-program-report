@@ -284,6 +284,12 @@ def normalize_project(project, state)
     'DirectorEmail' => (project['Director'] || {})['Email'],
     'Grantee' => grantee['Name'],
     'GranteeAddress' => grantee_address,
+    'GranteeAddress1' => grantee['Address1'],
+    'GranteeAddress2' => grantee['Address2'],
+    'GranteeAddress3' => grantee['Address3'],
+    'GranteeCity' => grantee['City'],
+    'GranteeState' => grantee['State'],
+    'GranteeZip' => grantee['Zip'],
     'GranteeType' => grantee['Type'],  # Only found in FY13 XML file
     'PlsId' => grantee['PlsId'],
     'IpedsId' => grantee['IpedsId'],
